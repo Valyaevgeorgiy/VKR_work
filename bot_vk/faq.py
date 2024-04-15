@@ -378,7 +378,10 @@ class FAQ(object):
         # проверка текста на наличие в нём кода эмодзи вк
         # принцип — если первый символ в тексте слова не буква, то это точно эмодзи!
         if text_low[0].isalpha() == False:
-            return "тут пустой текст"
+            if text_low[0].isdigit() and len(text_low) == 4:
+                return text_low
+            else:
+                return "тут пустой текст"
 
         # описываем текстовый шаблон для удаления: "все, что НЕ (^) является буквой \w или пробелом \s"
         re_not_word = r'[^\w\s]'
@@ -571,6 +574,8 @@ class FAQ(object):
                     # если точных совпадений 2
                     if (list_template_values[indexes_acc[0]] != list_template_values[indexes_acc[1]]):
                         # templates разные
+                        print(
+                            list_template_values[indexes_acc[0]], list_template_values[indexes_acc[1]])
                         return [2, list_template_values[indexes_acc[0]][0], list_template_values[indexes_acc[1]][0]]
                     else:
                         # templates одинаковые
@@ -625,83 +630,66 @@ class FAQ(object):
                 if sum(list(value.values())) == 0:
                     continue
                 else:
-                    for key_y, value_y in self.napravs_data[key].items():
-                        if value_y == 0:
-                            continue
-                        else:
-                            if 10 <= int(str(value_y)[-2:]) <= 20:
-                                kword_str = 'дисциплин'
-                            else:
-                                kword_dct = {1: 'дисциплина', 2: 'дисциплины',
-                                             3: 'дисциплины', 4: 'дисциплины', 5: 'дисциплин'}
-                                kword_str = kword_dct[int(
-                                    str(value_y)[-1])] if int(str(value_y)[-1]) <= 5 else kword_dct[5]
-
-                            final_lst.append(
-                                f'– «{key}» {key_y[-4:]} года ({value_y} {kword_str})')
-            else:
-                # делим кейс на ситуации, когда 1 словарь и когда словарей с данными больше 1
-                if types_values.count(False) == 1:
-                    ind_dict = types_values.index(False)
-                    data_dct = list(value.values())[ind_dict]
-                    count_d = sum(list(data_dct.values()))
-                    if count_d == 0:
+                    total_value = sum(
+                        dict(self.napravs_data[key].items()).values())
+                    if total_value == 0:
                         continue
                     else:
-                        year_d = list(data_dct.keys())[0][-4:]
-                        if 10 <= int(str(count_d)[-2:]) <= 20:
+                        if 10 <= int(str(total_value)[-2:]) <= 20:
                             kword_str = 'дисциплин'
                         else:
                             kword_dct = {1: 'дисциплина', 2: 'дисциплины',
                                          3: 'дисциплины', 4: 'дисциплины', 5: 'дисциплин'}
                             kword_str = kword_dct[int(
-                                str(count_d)[-1])] if int(str(count_d)[-1]) <= 5 else kword_dct[5]
+                                str(total_value)[-1])] if int(str(total_value)[-1]) <= 5 else kword_dct[5]
+
+                    final_lst.append(f'– «{key}» ({total_value} {kword_str})')
+
+            else:
+                # делим кейс на ситуации, когда 1 словарь и когда словарей с данными больше 1
+                if types_values.count(False) == 1:
+                    ind_dict = types_values.index(False)
+                    total_value = 0
+                    if ind_dict == (len(types_values) - 1):
+                        total_value += sum(list(value.values())[:ind_dict])
+                    else:
+                        total_value += sum(list(value.values())
+                                           [:ind_dict] + list(value.values())[ind_dict+1:])
+                    total_value += sum(list(list(value.values())
+                                       [ind_dict].values()))
+                    if total_value == 0:
+                        continue
+                    else:
+                        if 10 <= int(str(total_value)[-2:]) <= 20:
+                            kword_str = 'дисциплин'
+                        else:
+                            kword_dct = {1: 'дисциплина', 2: 'дисциплины',
+                                         3: 'дисциплины', 4: 'дисциплины', 5: 'дисциплин'}
+                            kword_str = kword_dct[int(
+                                str(total_value)[-1])] if int(str(total_value)[-1]) <= 5 else kword_dct[5]
 
                         final_lst.append(
-                            f'– «{key}» {year_d} года ({count_d} {kword_str})')
+                            f'– «{key}» ({total_value} {kword_str})')
 
                 else:
                     data_values = [value for value in list(
                         value.values()) if value != 0]
-                    for data_elem in data_values:
-                        if type(data_elem) != int:
-                            count_d = sum(list(data_elem.values()))
-                            if count_d == 0:
-                                continue
-                            else:
-                                year_d = list(data_elem.keys())[0][-4:]
-                                if 10 <= int(str(count_d)[-2:]) <= 20:
-                                    kword_str = 'дисциплин'
-                                else:
-                                    kword_dct = {1: 'дисциплина', 2: 'дисциплины',
-                                                 3: 'дисциплины', 4: 'дисциплины', 5: 'дисциплин'}
-                                    kword_str = kword_dct[int(
-                                        str(count_d)[-1])] if int(str(count_d)[-1]) <= 5 else kword_dct[5]
-
-                                final_lst.append(
-                                    f'– «{key}» {year_d} года ({count_d} {kword_str})')
+                    total_value = sum([elem if type(elem) == int else sum(
+                        elem.values()) for elem in data_values])
+                    if total_value == 0:
+                        continue
+                    else:
+                        if 10 <= int(str(total_value)[-2:]) <= 20:
+                            kword_str = 'дисциплин'
                         else:
-                            if data_elem == 0:
-                                continue
-                            else:
-                                ind_elem = data_values.index(data_elem)
-                                key_d = list(value.keys())[ind_elem]
-                                year_d = key_d[-4:]
-                                if 10 <= int(str(data_elem)[-2:]) <= 20:
-                                    kword_str = 'дисциплин'
-                                else:
-                                    kword_dct = {1: 'дисциплина', 2: 'дисциплины',
-                                                 3: 'дисциплины', 4: 'дисциплины', 5: 'дисциплин'}
-                                    kword_str = kword_dct[int(
-                                        str(data_elem)[-1])] if int(str(data_elem)[-1]) <= 5 else kword_dct[5]
+                            kword_dct = {1: 'дисциплина', 2: 'дисциплины',
+                                         3: 'дисциплины', 4: 'дисциплины', 5: 'дисциплин'}
+                            kword_str = kword_dct[int(
+                                str(total_value)[-1])] if int(str(total_value)[-1]) <= 5 else kword_dct[5]
 
-                                final_lst.append(
-                                    f'– «{key}» {year_d} года ({data_elem} {kword_str})')
+                    final_lst.append(f'– «{key}» ({total_value} {kword_str})')
+
         if len(final_lst) > 0:
-            # тема наподумать - когда в сообщении больше 15 направлений выходит, че делать?
-            # if len(final_lst) > 15:
-            #     ...
-            # else:
             return '\n'.join(final_lst)
         else:
             return 'пусто'
@@ -719,10 +707,12 @@ class FAQ(object):
 faq_table = FAQ(name="FAQ система",
                 sheet_link="https://docs.google.com/spreadsheets/d/1iYKz7fNpviX2r15v7QNlcYbYan2MGYqonytu05RDh6c/edit#gid=0")
 
-print(faq_table.search_user_says('я хочу узнать дисциплину про pandas'))
+print(faq_table.search_user_says('я хочу видеть дисциплины 2021 года'))
 # pprint.pprint(faq_table.template_to_keywords)
 
 # кейсы
 # я хочу перейти в главное меню
 # я хочу узнать дисциплину про python
 # расскажи мне что-нибудь про sql
+# я хочу видеть дисциплины 2021 года
+# про 2021
