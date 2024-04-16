@@ -421,6 +421,7 @@ class FAQ(object):
         if os.path.exists(file_path):
             # Если файл существует, удаляем его
             os.remove(file_path)
+            time.sleep(3)
 
         with open(file_path, 'w', encoding='utf-8') as write_file:
             json.dump(template_dict, write_file, ensure_ascii=False, indent=4)
@@ -460,12 +461,12 @@ class FAQ(object):
         results_lst = []
         for index, template_names in enumerate(self.user_says):
             names = template_names.lower().split(", ")
+            print(user_word, names)
             if user_word in names:
                 results_lst.append(self.templates[index][0])
                 # мэтчинг шаблонов по направлениям и сферам деятельности
                 # начало подготовки аналитической сводки по ключевому слову
                 keyw_t = self.templates[index][0]
-                print(keyw_t)
 
                 # ищем мэтч сначала по сферам
                 for sphere in self.spheres:
@@ -489,7 +490,6 @@ class FAQ(object):
                 )
                 for naprav in naprav_without_spheres:
                     if naprav in keyw_t:
-                        print(naprav)
                         name_naprav = self.temp_to_name_naprav[naprav[-5::-1][::-1]
                                                                if '_' not in naprav else (naprav.split('_'))[0]]
                         self.napravs_data[name_naprav][naprav] += 1
@@ -707,7 +707,8 @@ class FAQ(object):
 faq_table = FAQ(name="FAQ система",
                 sheet_link="https://docs.google.com/spreadsheets/d/1iYKz7fNpviX2r15v7QNlcYbYan2MGYqonytu05RDh6c/edit#gid=0")
 
-print(faq_table.search_user_says('я хочу видеть дисциплины 2021 года'))
+print(faq_table.search_user_says(
+    'хочу посмотреть дисциплины по прикладной математике и информатике, гоу?'))
 # pprint.pprint(faq_table.template_to_keywords)
 
 # кейсы
@@ -716,3 +717,5 @@ print(faq_table.search_user_says('я хочу видеть дисциплины 
 # расскажи мне что-нибудь про sql
 # я хочу видеть дисциплины 2021 года
 # про 2021
+# хочу поступить на прикладную информатику, покажи мне дисциплины
+# меня интересует иб, покажи дисциплины
