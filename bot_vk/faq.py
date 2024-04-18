@@ -461,12 +461,12 @@ class FAQ(object):
         results_lst = []
         for index, template_names in enumerate(self.user_says):
             names = template_names.lower().split(", ")
-            print(user_word, names)
+            # print(user_word, names)
             if user_word in names:
-                results_lst.append(self.templates[index][0])
+                keyw_t = self.templates[index][0]
+                results_lst.append(keyw_t)
                 # мэтчинг шаблонов по направлениям и сферам деятельности
                 # начало подготовки аналитической сводки по ключевому слову
-                keyw_t = self.templates[index][0]
 
                 # ищем мэтч сначала по сферам
                 for sphere in self.spheres:
@@ -494,6 +494,14 @@ class FAQ(object):
                                                                if '_' not in naprav else (naprav.split('_'))[0]]
                         self.napravs_data[name_naprav][naprav] += 1
                         break
+
+        # если у нас идёт поиск шаблона направления, то тут без рандомного перемешивания списка шаблонов вообще
+        napr_lst = [res[-5::-1][::-1]
+                    if '_' not in res else (res.split('_'))[0] for res in results_lst]
+        is_all_napr_lst = [
+            True if elem in self.temp_to_name_naprav.keys() else False for elem in napr_lst]
+        if sum(is_all_napr_lst) == len(is_all_napr_lst) and sum(is_all_napr_lst) > 0:
+            return [3] + results_lst[:3][::-1]
 
         if len(results_lst) == 0:
             return self.get_potential_templates(user_word)
